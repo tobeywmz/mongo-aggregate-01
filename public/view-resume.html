@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View resume</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 10px
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <table>
+      <tr>
+        <td>Education</td>
+        <td id="education"></td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td id="email"></td>
+      </tr>
+      <tr>
+        <td>Date of Birth</td>
+        <td id="date-of-birth"></td>
+      </tr>
+      <tr>
+        <td>Address</td>
+        <td id="address"></td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td id="description"></td>
+      </tr>
+    </table>
+  </div>
+  <br>
+  <h1>Average Rating</h1>
+  <p id="average-rating"></p>
+  <br>
+  <h2>Add Comment</h2>
+  <div>
+    <input type="text" placeholder="title" id="comment-title" />
+    <input type="text" placeholder="description" id="comment-description" />
+    <input type="number" placeholder="rating" id="comment-rating" min="0" max="10" />
+    <button id="comment-button" onclick="createCommentF()">Create</button>
+  </div>
+  <br>
+  <h2>Comments</h2>
+  <div id="comments">
+    
+  </div>
+  <script>
+    async function createCommentF() {
+      const title = document.getElementById('comment-title').value;
+      const description = document.getElementById('comment-description').value;
+      const rating = document.getElementById('comment-rating').value;
+      const urlParams = new URLSearchParams(window.location.search);
+      const resumeId = urlParams.get('id');
+
+      await fetch('/comment/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title,
+          description: description,
+          rating: rating,
+          resumeId: resumeId
+        })
+      });
+
+      window.location.reload();
+    }
+  </script>
+  <script>
+    window.onload = async function() {
+      // Read query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+
+      const result = await fetch('/resume/'+id, { method : "GET" });
+      const data = await result.json();
+
+      document.getElementById('education').textContent = data.resume.education;
+      document.getElementById('address').textContent = data.resume.address;
+      document.getElementById('email').textContent = data.resume.email;
+      document.getElementById('description').textContent = data.resume.description;
+      const dateOfBirth = new Date(data.resume.dateOfBirth);
+      document.getElementById('date-of-birth').textContent = `${dateOfBirth.getFullYear()}/${dateOfBirth.getMonth() + 1}/${dateOfBirth.getDate()}`;
+
+      let commentsHTML = `
+        <table>
+          <tr>
+            <td>title</td>
+            <td>description</td>
+            <td>date</td>
+            <td>user</td>
+            <td>rating</td>
+          </tr>`;
+      data.comments.forEach(comment => {
+        const date = new Date(comment.createdAt);
+        commentsHTML += `
+          <tr>
+            <td>${comment.title}</td>
+            <td>${comment.description}</td>
+            <td>${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}</td>
+            <td>${comment.user.name}</td>
+            <td>${comment.rating}</td>
+          </tr>
+        `;
+      });
+      commentsHTML += `</table>`;
+      document.getElementById('comments').insertAdjacentHTML('afterbegin', commentsHTML);
+
+      document.getElementById('average-rating').textContent = data?.averageRating[0]?.averageRating
+    };
+  </script>
+</body>
+</html>

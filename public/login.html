@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+  <div>
+    <input placeholder="username" id="username" />
+    <input placeholder="password" type="password" id="password" />
+    <button id="login-button" onclick="login()">Login</button>
+  </div>
+  <script>
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const result = await fetch('/user/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: username,
+          password: password
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!result.ok)
+      {
+        alert('Username or password invalid');
+      } else {
+        window.location.replace('/home.html');
+      }
+    }
+  </script>
+</body>
+</html>

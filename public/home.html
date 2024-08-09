@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>home</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 10px
+    }
+  </style>
+</head>
+<body>
+  <button onclick="logout()">logout</button>
+  <h1>Statistics</h1>
+  <table>
+    <tr>
+      <td>Users</td>
+      <td id="user-count"></td>
+    </tr>
+    <tr>
+      <td>Comments</td>
+      <td id="comment-count"></td>
+    </tr>
+    <tr>
+      <td>Resumes</td>
+      <td id="resume-count"></td>
+    </tr>
+  </table>
+  <br>
+
+  <h1>Create a resume</h1>
+  <div>
+    <input type="text" id="education" placeholder="education">
+    <input type="text" id="email" placeholder="email">
+    <input type="text" id="address" placeholder="address">
+    <input type="text" id="description" placeholder="description">
+    <input type="date" id="date-of-birth" placeholder="date of birth">
+    <button onclick="createResume()">Create</button>
+  </div>
+
+  <br>
+  <h1>Search resumes</h1>
+  <div>
+    <input id="search-input" placeholder="name" />
+    <button id="search-button" onclick="search()">Search</button>
+  </div>
+  <br>
+  <div id="resumes">
+    
+  </div>
+  <script>
+    window.onload = async function() {
+      const result = await fetch('/statistics/global');
+      const data = await result.json();
+      document.getElementById('user-count').textContent = data.userCount;
+      document.getElementById('comment-count').textContent = data.commentCount;
+      document.getElementById('resume-count').textContent = data.resumeCount;
+    };
+
+    async function search() {
+      const name = document.getElementById('search-input').value;
+      // /resume/search/?name=yeganeh
+      const result = await fetch('/resume/search?name=' + name, { method: 'GET' });
+      const resumes = await result.json();
+      let html = `
+        <table>
+          <tr>
+            <td></td>
+            <td>Email</td>
+            <td>Username</td>
+            <td></td>
+          </tr>`
+      for (let i = 0; i < resumes.length; i++)
+      {
+        html += `<tr>
+            <td>${i + 1}</td>
+            <td>${resumes[i].email}</td>
+            <td>${resumes[i].user.username}</td>
+            <td><a href="/view-resume.html?id=${resumes[i]._id}">View</a></td>
+          </tr>`;
+      }
+      html += '</table>';
+      document.getElementById('resumes').textContent = ''
+      document.getElementById('resumes').insertAdjacentHTML('afterbegin', html);
+    }
+
+    async function createResume() {
+      const education = document.getElementById('education').value;
+      const address = document.getElementById('address').value;
+      const email = document.getElementById('email').value;
+      const description = document.getElementById('description').value;
+      const dateOfBirth = document.getElementById('date-of-birth').value;
+
+      await fetch('/resume/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          education: education,
+          address: address,
+          description: description,
+          email: email,
+          dateOfBirth: dateOfBirth,
+        })
+      })
+
+      alert('created new resume')
+    }
+
+    async function logout() {
+      await fetch('/user/logout', { method: 'POST' });
+      window.location.replace('/login.html');
+    }
+  </script>
+</body>
+</html>
